@@ -1,8 +1,8 @@
 {
-  "name": "goit-react-hw-03-image-finder",
+  "name": "goit-react-hw-04-images",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://YuliiaMay.github.io/goit-react-hw-03-image-finder/",
+  "homepage": "https://YuliiaMay.github.io/goit-react-hw-04-images/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^12.1.4",
@@ -13,7 +13,6 @@
     "react-icons": "^4.8.0",
     "react-loader-spinner": "^5.3.4",
     "react-scripts": "5.0.1",
-    "react-spinners": "^0.13.8",
     "react-toastify": "^9.1.2",
     "styled-components": "^5.3.9",
     "web-vitals": "^2.1.3"

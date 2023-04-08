@@ -1,34 +1,30 @@
-import React, { Component } from "react";
+import { useState, useEffect } from "react";
 import { Overlay, ModalContainer, ModalImg, CloseModalBtn } from "./Modal.styled";
 import { ImCross } from "react-icons/im";
 
-class Modal extends Component {
-    componentDidMount() {
-        window.addEventListener('keydown', this.handleKeyDown);
-    }
+function Modal({ query, bigImgUrl, onClose }) {
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+    }, [])
 
-    componentWillUnmount() {
-        window.removeEventListener('keydown', this.handleKeyDown);
-    }
+    useEffect(() => {
+        return () => { window.removeEventListener('keydown', handleKeyDown); };
+    }, [handleKeyDown])
 
-    handleKeyDown = e => {
+    const handleKeyDown = (e) => {
         if (e.code === 'Escape') {
-            return this.props.onClose();
+            return onClose();
         }
     };
 
-    render() {
-        const { bigImgUrl, query } = this.props;
-
-        return (
-            <Overlay>
-                <ModalContainer>
-                    <ModalImg src={bigImgUrl} alt={query} />
-                </ModalContainer>
-                <CloseModalBtn><ImCross size={28}/></CloseModalBtn>
-            </Overlay>
-        )
-    }
+    return (
+        <Overlay>
+            <ModalContainer>
+                <ModalImg src={bigImgUrl} alt={query} />
+            </ModalContainer>
+            <CloseModalBtn><ImCross size={28}/></CloseModalBtn>
+        </Overlay>
+    )
 }
 
 export default Modal;

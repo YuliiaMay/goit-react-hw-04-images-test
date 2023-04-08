@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { useState, useEffect } from "react";
 import ImageGalleryItem from "components/ImageGalleryItem/ImageGalleryItem";
 import { GalleryWrapper } from "./ImageGallery.styled";
 import LoadMoreButton from "components/Button/Button";
@@ -9,64 +9,129 @@ import { toast } from 'react-toastify';
 import Modal from "components/Modal/Modal";
 import { fetchImages } from "services/api";
 import scrollPageDown from "helpers/Scroll";
+import axios from 'axios';
+
+const Status = {
+    IDLE: 'idle',
+    PENDING: 'pending',
+    RESOLVED: 'resolved',
+    REJECTED: 'rejected'
+}
+
+const ImageGallery = ({ query }) => {
+    const [gallery, setGallery] = useState([]);
+    const [status, setStatus] = useState(Status.IDLE);
+    const [page, setPage] = useState(1);
+    const [showModal, setShowModal] = useState(false);
+    const [bigImgUrl, setBidImgUrl] = useState(null);
+    const [total, setTotal] = useState(null);
+    const [isLoadBtn, setIsLoadBtn] = useState(false);
 
 
-export default class ImageGallery extends Component {
-    state = {
-        gallery: [],
-        status: 'idle',
-        page: 1,
-        showModal: false,
-        bigImgUrl: null,
-        total: null,
-        isLoadBtn: false
-    }
-
-    componentDidMount() {
+    useEffect(() => {
         document.addEventListener('click', ({ target }) => {
             if (target.nodeName !== 'IMG') {
-                    this.setState({ showModal: false });
-                    return;
+                setShowModal(false);
+                return;
             }
 
-            this.setState({ showModal: true });
-        });        
-    }
+            setShowModal(true);
+        });
+    }, []);
 
-    componentDidUpdate = (prevProps, prevState) => {
-        const { page } = this.state;
-        const prevQuery = prevProps.query;
-        const currentQuery = this.props.query;
 
-        if (currentQuery !== prevQuery) {
-            this.setState({
-                gallery: [],
-                page: 1,
-            });
+    // console.log(gallery);
+
+    useEffect(() => {
+        if (!query) return;
+
+        setStatus(Status.PENDING);
+
+        async function getImages() {
+            try {
+                const GalleryData = await fetchImages(query, page);
+                const newImg = GalleryData.data.hits;
+                console.log(newImg);
+                setTotal(GalleryData.data.totalHits);
+
+                if (newImg.length > 0) {
+                    setStatus(Status.RESOLVED);
+                    setGallery(prevGallery => [...prevGallery, ...newImg]);
+
+                    if (status === 'resolved' && page === 1 && showModal === false) {
+                        showSuccesMessage();
+                    }
+
+                    if (page > 1) {
+                        scrollPageDown();
+                    }
+                    return;
+                }
+
+                showErrorMessage(query);
+                setStatus(Status.REJECTED)
+            } catch (error) {
+                setStatus(Status.REJECTED)
+            }
+
         }
 
+        getImages();
+        reset();
+    },  [query, page])
 
-        if (currentQuery !== prevQuery || prevState.page !== page) {
-            this.setState({ status: 'pending' })
-            this.getImages();
-        }
+
+    // componentDidUpdate = (prevProps, prevState) => {
+    //     const { page } = this.state;
+    //     const prevQuery = prevProps.query;
+    //     const currentQuery = this.props.query;
+
+    //     if (currentQuery !== prevQuery) {
+    //         this.setState({
+    //             gallery: [],
+    //             page: 1,
+    //         });
+    //     }
+
+    //     if (currentQuery !== prevQuery || prevState.page !== page) {
+    //         this.setState({ status: 'pending' })
+    //         this.getImages();
+    //     }
+    // }
+
+
+
+
+    const toggleModal = () => {
+        setShowModal(!showModal);
+        // this.setState(({ showModal }) => ({ showModal: !showModal }));
+    };
+
+    const openModal = ({ target }) => {
+        setBidImgUrl(target.dataset.url)
+        // this.setState({bigImgUrl: target.dataset.url})
     }
 
-    showSuccesMessage = () => {
-        const { total } = this.state;
-            return toast.success(`Total images in this gallery: ${total}`, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
+
+    const handleLoadMore = () => {
+        setPage(prevPage => prevPage + 1);
     }
 
-    showErrorMessage = () => {
+    
+    const showSuccesMessage = () => {
+        toast.success(`Total images in this gallery: ${total}`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+        });
+    }
+
+    const showErrorMessage = () => {
         toast.error("Let's try something else", {
             position: "top-right",
             autoClose: 5000,
@@ -77,107 +142,56 @@ export default class ImageGallery extends Component {
             progress: undefined,
             theme: "light",
         });
-    } 
+    }     
 
-    getImages = () => {
-        const { page, status, showModal } = this.state;
-        const { query } = this.props;
-
-        fetchImages(query, page)
-            .then(({ data }) => {
-                const total = data.totalHits;
-                const newImages = data.hits;
-
-                if (!newImages.length) {
-                    this.showErrorMessage(query);
-                    this.setState({status: 'rejected'})
-                    return;
-                }
-
-                this.setState(({ gallery }) => {
-                    const newArray = [...gallery, ...newImages];
-                    return {
-                        gallery: newArray,
-                        status: 'resolved',
-                        total
-                    }
-                })
-
-                if (status === 'resolved' && page === 1 && showModal === false) {
-                    this.showSuccesMessage();
-                }
-
-                if (page > 1) {
-                    scrollPageDown();
-                }
-            })
-            .catch(error => this.setState({
-                status: 'rejected',
-            })) 
+    const reset = () => {
+        setGallery([]);
+        setPage(1);
     }
 
-    toggleModal = () => {
-        this.setState(({ showModal }) => ({ showModal: !showModal }));
-    };
-
-    openModal = ({target}) => {
-        this.setState({bigImgUrl: target.dataset.url})
+    if (status === Status.IDLE) {
+        return (<DeafaultScreen />);
     }
 
-
-    handleLoadMore = () => {
-        this.setState(prevState => ({
-            page: prevState.page + 1,
-        }));
+    if (status === Status.PENDING) {
+        return (<Spiner />);
     }
 
-    render() {
-        console.log(this.props);
-        
-        const { gallery, status, showModal, bigImgUrl, total } = this.state;
+    if (status === Status.REJECTED) {
+        return (<ErrorScreen query={query} />);
+    }
 
-
-        if (status === 'idle') {
-            return (<DeafaultScreen />);
-        }
-
-        if (status === 'pending') {
-            return (<Spiner />);
-        }
-
-        if (status === 'rejected') {
-            return (<ErrorScreen query={this.props.query} />);
-        }
-
-        if (status === 'resolved') {
-            return (
-                <>
-                    <GalleryWrapper onClick={this.toggleModal}>
-                        {
-                            gallery.map(({ id, webformatURL, largeImageURL}) =>
-                                <ImageGalleryItem
-                                    key={id}
-                                    smallUrl={webformatURL}
-                                    largeUrl={largeImageURL}
-                                    onOpenModal={this.openModal}
-                                />
-                            )
-                        }
-                    </GalleryWrapper>
-
+    if (status === Status.RESOLVED) {
+        return (
+            <>
+                <GalleryWrapper onClick={toggleModal}>
                     {
-                        showModal && <Modal onClose={this.toggleModal}  bigImgUrl={bigImgUrl} query={this.props.query} />
-                    }
-
-
-                    {
-                        gallery.length > 0 && gallery.length !== total && (
-                            <LoadMoreButton onLoadMore={this.handleLoadMore} query={this.props.query} />
+                        gallery.map(({ id, webformatURL, largeImageURL}) =>
+                            <ImageGalleryItem
+                                key={id}
+                                smallUrl={webformatURL}
+                                largeUrl={largeImageURL}
+                                onOpenModal={openModal}
+                            />
                         )
                     }
-                    
-                </>
-            )
-        }
+                </GalleryWrapper>
+
+                {
+                    showModal && <Modal onClose={toggleModal}  bigImgUrl={bigImgUrl} query={query} />
+                }
+
+
+                {
+                    gallery.length > 0 && gallery.length !== total && (
+                        <LoadMoreButton onLoadMore={handleLoadMore} />
+                    )
+                }
+                
+            </>
+        )
     }
+    // }
 }
+
+export default ImageGallery;

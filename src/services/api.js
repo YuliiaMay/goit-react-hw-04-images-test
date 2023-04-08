@@ -14,10 +14,11 @@ export async function fetchImages(query, page) {
                 page,
                 image_type: 'photo',
                 orientation: 'horizontal',
-                per_page: 12,
+                per_page: 3,
             },
         });
 
+        
 
         if (response.status === 200) {
             return response;
@@ -29,7 +30,6 @@ export async function fetchImages(query, page) {
     } catch(error) {
         console.log(error.message);
     }
-
 }
 
 
