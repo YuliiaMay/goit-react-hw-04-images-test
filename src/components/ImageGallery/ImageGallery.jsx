@@ -40,7 +40,9 @@ const ImageGallery = ({ query }) => {
     }, []);
 
 
-    // console.log(gallery);
+    useEffect(() => {
+        reset();
+    }, [query])
 
     useEffect(() => {
         if (!query) return;
@@ -51,15 +53,17 @@ const ImageGallery = ({ query }) => {
             try {
                 const GalleryData = await fetchImages(query, page);
                 const newImg = GalleryData.data.hits;
-                console.log(newImg);
-                setTotal(GalleryData.data.totalHits);
+                const total = GalleryData.data.totalHits;
+
+                setTotal(total);
 
                 if (newImg.length > 0) {
                     setStatus(Status.RESOLVED);
                     setGallery(prevGallery => [...prevGallery, ...newImg]);
+                    
 
-                    if (status === 'resolved' && page === 1 && showModal === false) {
-                        showSuccesMessage();
+                    if (page === 1 && showModal === false) {
+                        showSuccesMessage(total);
                     }
 
                     if (page > 1) {
@@ -73,43 +77,21 @@ const ImageGallery = ({ query }) => {
             } catch (error) {
                 setStatus(Status.REJECTED)
             }
-
         }
 
         getImages();
-        reset();
-    },  [query, page])
-
-
-    // componentDidUpdate = (prevProps, prevState) => {
-    //     const { page } = this.state;
-    //     const prevQuery = prevProps.query;
-    //     const currentQuery = this.props.query;
-
-    //     if (currentQuery !== prevQuery) {
-    //         this.setState({
-    //             gallery: [],
-    //             page: 1,
-    //         });
-    //     }
-
-    //     if (currentQuery !== prevQuery || prevState.page !== page) {
-    //         this.setState({ status: 'pending' })
-    //         this.getImages();
-    //     }
-    // }
-
-
+        
+    }, [query, page])
+    
 
 
     const toggleModal = () => {
         setShowModal(!showModal);
-        // this.setState(({ showModal }) => ({ showModal: !showModal }));
     };
 
     const openModal = ({ target }) => {
         setBidImgUrl(target.dataset.url)
-        // this.setState({bigImgUrl: target.dataset.url})
+        setShowModal(true);
     }
 
 
@@ -118,8 +100,8 @@ const ImageGallery = ({ query }) => {
     }
 
     
-    const showSuccesMessage = () => {
-        toast.success(`Total images in this gallery: ${total}`, {
+    const showSuccesMessage = (total) => {
+        return toast.success(`Total images in this gallery: ${total}`, {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -172,6 +154,7 @@ const ImageGallery = ({ query }) => {
                                 smallUrl={webformatURL}
                                 largeUrl={largeImageURL}
                                 onOpenModal={openModal}
+                                query={query}
                             />
                         )
                     }
@@ -191,7 +174,6 @@ const ImageGallery = ({ query }) => {
             </>
         )
     }
-    // }
 }
 
 export default ImageGallery;
