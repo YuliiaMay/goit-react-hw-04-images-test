@@ -4,14 +4,14 @@ import { ImCross } from "react-icons/im";
 
 function Modal({ query, bigImgUrl, onClose }) {
     const handleKeyDown = (e) => {
-    if (e.code === 'Escape') {
-        return onClose();
-    }
+        if (e.code === 'Escape') {
+            return onClose();
+        }
     };
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
-    }, [])
+    }, [bigImgUrl])
 
     useEffect(() => {
         return () => { window.removeEventListener('keydown', handleKeyDown); };

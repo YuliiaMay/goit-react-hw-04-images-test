@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 import Modal from "components/Modal/Modal";
 import { fetchImages } from "services/api";
 import scrollPageDown from "helpers/Scroll";
-import axios from 'axios';
+
 
 const Status = {
     IDLE: 'idle',
@@ -25,7 +25,7 @@ const ImageGallery = ({ query }) => {
     const [showModal, setShowModal] = useState(false);
     const [bigImgUrl, setBidImgUrl] = useState(null);
     const [total, setTotal] = useState(null);
-    const [isLoadBtn, setIsLoadBtn] = useState(false);
+    
 
 
     useEffect(() => {
